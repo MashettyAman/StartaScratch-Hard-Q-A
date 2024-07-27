@@ -1,0 +1,43 @@
+# SalesForce - More Than 100 Dollars
+
+#link - https://platform.stratascratch.com/coding/2115-more-than-100-dollars?code_type=2
+
+* The company for which you work is reviewing its 2021 monthly sales.
+
+* For each month of 2021, calculate what percentage of restaurants have reached at least 100$ or more in monthly sales.
+
+* Note: Please remember that if an order has a blank value for actual_delivery_time, 
+   it has been canceled and therefore does not count towards monthly sales.
+
+# Convert date columns to datetime
+delivery_orders['order_placed_time'] = pd.to_datetime(delivery_orders['order_placed_time'], format='%d-%m-%Y %H:%M')
+delivery_orders['actual_delivery_time'] = pd.to_datetime(delivery_orders['actual_delivery_time'], format='%d-%m-%Y %H:%M')
+
+# Filter out canceled orders
+delivery_orders = delivery_orders[delivery_orders['actual_delivery_time'].notna()]
+
+# Filter orders placed in 2021
+delivery_orders_2021 = delivery_orders[delivery_orders['order_placed_time'].dt.year == 2021]
+
+# Merge DataFrames on delivery_id
+merged_df = pd.merge(order_value, delivery_orders_2021, on='delivery_id')
+
+# Add a 'month' column
+merged_df['month'] = merged_df['order_placed_time'].dt.to_period('M')
+
+# Aggregate sales by restaurant_id and month
+monthly_sales = merged_df.groupby(['restaurant_id', 'month'])['sales_amount'].sum().reset_index()
+
+# Aggregate sales by month
+total_restaurants_per_month = monthly_sales.groupby('month')['restaurant_id'].count().reset_index()
+restaurants_over_100 = monthly_sales[monthly_sales['sales_amount'] >= 100].groupby('month')['restaurant_id'].count().reset_index()
+
+# Merge to get the percentage
+percentage_df = pd.merge(total_restaurants_per_month, restaurants_over_100, on='month', suffixes=('_total', '_over_100'))
+percentage_df['percentage'] = (percentage_df['restaurant_id_over_100'] / percentage_df['restaurant_id_total']) * 100
+
+# Rename columns for clarity
+percentage_df.columns = ['month', 'total_restaurants', 'restaurants_over_100', 'percentage']
+
+# Display the result
+print(percentage_df)
