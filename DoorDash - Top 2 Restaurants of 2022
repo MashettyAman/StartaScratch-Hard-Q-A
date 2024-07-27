@@ -1,0 +1,33 @@
+#  DoorDash - Top 2 Restaurants of 2022
+
+#Link - https://platform.stratascratch.com/coding/2138-top-3-restaurants-of-2022?code_type=2
+
+Christmas is quickly approaching, and your team anticipates an increase in sales. 
+ To predict the busiest restaurants, they wanted to identify the top two restaurants by ID in terms of sales in 2022.
+
+The output should include the restaurant IDs and their corresponding sales.
+
+Note: Please remember that if an order has a blank value for actual_delivery_time, 
+ it has been canceled and therefore does not count towards monthly sales.
+
+# Convert date columns to datetime
+delivery_orders['order_placed_time'] = pd.to_datetime(delivery_orders['order_placed_time'], format='%d-%m-%Y %H:%M')
+delivery_orders['actual_delivery_time'] = pd.to_datetime(delivery_orders['actual_delivery_time'], format='%d-%m-%Y %H:%M')
+
+# Filter out canceled orders
+delivery_orders = delivery_orders[delivery_orders['actual_delivery_time'].notna()]
+
+# Filter orders placed in 2022
+delivery_orders_2022 = delivery_orders[delivery_orders['order_placed_time'].dt.year == 2022]
+
+# Merge DataFrames on delivery_id
+merged_df = pd.merge(order_value, delivery_orders_2022, on='delivery_id')
+
+# Aggregate sales by restaurant_id
+restaurant_sales = merged_df.groupby('restaurant_id')['sales_amount'].sum().reset_index()
+
+# Identify top two restaurants by sales
+top_two_restaurants = restaurant_sales.nlargest(2, 'sales_amount',keep = 'all')
+
+# Display the result
+print(top_two_restaurants)
