@@ -1,0 +1,29 @@
+# DoorDash - First Ever Ratings
+
+# Link - https://platform.stratascratch.com/coding/2114-first-ever-ratings?code_type=2 
+
+The company you work for is looking at their delivery drivers' first-ever delivery with the company.
+
+You have been tasked with finding what percentage of drivers' first-ever completed orders have a rating of 0.
+
+Note: Please remember that if an order has a blank value for actual_delivery_time, 
+it has been canceled and therefore does not count as a completed delivery.
+
+df = delivery_orders.copy()
+
+# Filter out canceled orders
+df = df[df['actual_delivery_time'].notna()]
+
+# Sort by driver_id and order_placed_time to find the first completed order for each driver
+df = df.sort_values(by=['driver_id', 'order_placed_time'])
+
+# Drop duplicates to get the first order for each driver
+first_orders = df.drop_duplicates(subset=['driver_id'], keep='first')
+
+# Calculate the percentage of first orders with a rating of 0
+total_first_orders = len(first_orders)
+first_orders_with_zero_rating = len(first_orders[first_orders['delivery_rating'] == 0])
+
+percentage = (first_orders_with_zero_rating / total_first_orders) * 100
+
+print(f"Percentage of drivers' first-ever completed orders with a rating of 0: {percentage:.2f}%")
