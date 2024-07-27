@@ -8,6 +8,23 @@ What percentage of phone calls are international? Round the result to 1 decimal.
 # Explaination
 There is a total of 4 calls with 2 of them being international calls (from caller_id 1 => receiver_id 5, and caller_id 5 => receiver_id 1). Thus, 2/4 = 50.0%
 
+# Performing the equivalent SQL joins and filtering
+merged_calls = phone_calls.merge(phone_info[['caller_id', 'country_id']], left_on='caller_id', right_on='caller_id')
+merged_calls = merged_calls.merge(phone_info[['caller_id', 'country_id']], left_on='receiver_id', right_on='caller_id', suffixes=('_caller', '_receiver'))
+
+# Filtering for international calls
+international_calls = merged_calls[merged_calls['country_id_caller'] != merged_calls['country_id_receiver']]
+
+# Calculating the percentage of international calls
+total_calls = len(phone_calls)
+international_call_pct = 100.0 * len(international_calls) / total_calls
+international_call_pct_rounded = round(international_call_pct, 1)
+print(f"Percentage of international calls: {international_call_pct_rounded}%")
+
+
+
+#******************************** PostgreSQL 14 **************************#
+
 WITH international_calls AS (
 SELECT 
   caller.caller_id, 
@@ -27,9 +44,5 @@ SELECT
     100.0 * COUNT(*)
   / (SELECT COUNT(*) FROM phone_calls),1) AS international_call_pct
 FROM international_calls;
-
-
-
-
 
 
