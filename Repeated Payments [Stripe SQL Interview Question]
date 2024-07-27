@@ -1,0 +1,67 @@
+# Repeated Payments [CRED Interview Question]
+
+# Solved both Python and SQL
+
+# link - https://datalemur.com/questions/repeated-payments
+
+* Sometimes, payment transactions are repeated by accident; it could be due to uer error, 
+  API failure or a retry error that causes a credit card to be charged twice.
+
+* Using the transactions table, identify any payments made at the same merchant with the same credit card 
+for the same amount within 10 minutes of each other. Count such repeated payments.
+
+* Assumptions:
+
+* The first transaction of such payments should not be counted as a repeated payment. This means, 
+if there are two transactions performed by a merchant with the same credit card and for the same amount within 10 minutes, 
+there will only be 1 repeated payment.
+
+# Convert transaction_timestamp to datetime
+df['transaction_timestamp'] = pd.to_datetime(df['transaction_timestamp'])
+
+# Sort DataFrame by merchant_id, credit_card_id, amount, and transaction_timestamp
+df = df.sort_values(by=['merchant_id', 'credit_card_id', 'amount', 'transaction_timestamp'])
+
+# Calculate time difference between consecutive transactions
+df['time_diff'] = df.groupby(['merchant_id', 'credit_card_id', 'amount'])['transaction_timestamp'].diff()
+
+# # Identify repeated transactions within 10 minutes
+df['is_repeated'] = (df['time_diff'] <= pd.Timedelta(minutes=10))
+
+# # We do not count the first transaction as repeated, so we use shift to adjust
+df['is_repeated'] = df.groupby(['merchant_id', 'credit_card_id', 'amount'])['is_repeated'].shift(-1, fill_value=False)
+
+# # Count repeated transactions
+repeated_payments_count = df['is_repeated'].sum()
+
+print(f"Number of repeated payments: {repeated_payments_count}")
+
+
+
+## SQL
+
+WITH payments AS (
+  SELECT 
+    merchant_id, 
+    EXTRACT(EPOCH FROM transaction_timestamp - 
+      LAG(transaction_timestamp) OVER(
+        PARTITION BY merchant_id, credit_card_id, amount 
+        ORDER BY transaction_timestamp)
+    )/60 AS minute_difference 
+  FROM transactions) 
+
+SELECT COUNT(merchant_id) AS payment_count
+FROM payments 
+WHERE minute_difference <= 10;
+
+/***********************************************************************
+EPOCH calculates the total number of seconds in a given interval.
+To calculate the difference in minutes, we divide these seconds by 60
+(1 minute = 60 seconds). For example, the time interval 
+for transaction id 5 is 1 hour and 9 minutes. 
+EPOCH calculates its value as 4140 seconds. 
+By dividing it by 60, we arrive at 69 minutes
+***************************************************************************/
+
+
+
