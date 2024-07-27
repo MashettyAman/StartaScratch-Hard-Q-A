@@ -1,5 +1,7 @@
 # Popularity Percentage
 
+# https://platform.stratascratch.com/coding/10284-popularity-percentage?code_type=2
+
 #Find the popularity percentage for each user on Meta/Facebook. 
 #The popularity percentage is defined as the total number of friends the user has divided by the total number of users on the platform, 
 #then converted into a percentage by multiplying by 100.
