@@ -1,0 +1,28 @@
+# DoorDash - Lowest Revenue Generated Restaurants
+
+# Link - https://platform.stratascratch.com/coding/2036-lowest-revenue-generated-restaurants?code_type=2
+
+* Write a query that returns a list of the bottom 2% revenue generating restaurants. 
+ Return a list of restaurant IDs and their total revenue from when customers placed orders in May 2020.
+
+* You can calculate the total revenue by summing the order_total column. 
+And you should calculate the bottom 2% by partitioning the total revenue into evenly distributed buckets.
+
+# Convert datetime column to datetime type
+df['customer_placed_order_datetime'] = pd.to_datetime(df['customer_placed_order_datetime'])
+
+# Filter for May 2020
+df_may_2020 = df[(df['customer_placed_order_datetime'] >= '2020-05-01') & 
+                 (df['customer_placed_order_datetime'] <= '2020-05-31')]
+
+# Calculate total revenue per restaurant
+total_revenue_per_restaurant = df_may_2020.groupby('restaurant_id')['order_total'].sum().reset_index()
+
+# Calculate the 2nd percentile of total revenues
+percentile_2 = total_revenue_per_restaurant['order_total'].quantile(0.02)
+
+# Filter for the bottom 2% revenue generating restaurants
+bottom_2_percent_restaurants = total_revenue_per_restaurant[total_revenue_per_restaurant['order_total'] <= percentile_2]
+
+# Output the result
+print(bottom_2_percent_restaurants)
