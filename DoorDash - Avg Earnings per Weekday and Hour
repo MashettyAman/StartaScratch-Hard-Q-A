@@ -27,5 +27,4 @@ result = df.groupby(['weekday', 'hour'])['net_order_total'].mean().reset_index()
 
 # Round earnings to 2 decimals
 result['net_order_total'] = result['net_order_total'].round(2)
-
 print(result)
