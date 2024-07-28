@@ -1,0 +1,54 @@
+# UBER Naive Forecasting
+
+#Link - https://platform.stratascratch.com/coding/10313-naive-forecasting?code_type=2
+
+* Some forecasting methods are extremely simple and surprisingly effective. Naïve forecast is one of them; 
+
+* we simply set all forecasts to be the value of the last observation. Our goal is to develop a naïve forecast for a 
+  new metric called "distance per dollar" defined as the (distance_to_travel/monetary_cost) in our dataset and measure its accuracy.
+
+* To develop this forecast,  sum "distance to travel"  and "monetary cost" values at a monthly level 
+   before calculating "distance per dollar". 
+
+* This value becomes your actual value for the current month. The next step is to populate the forecasted value for each month. 
+
+* This can be achieved simply by getting the previous month's value in a separate column. Now, we have actual and forecasted values. 
+
+* This is your naïve forecast. Let’s evaluate our model by calculating an error matrix called root mean squared error (RMSE). 
+
+* RMSE is defined as sqrt(mean(square(actual - forecast)). Report out the RMSE rounded to the 2nd decimal spot.
+
+
+# Import your libraries
+import pandas as pd
+import numpy as np
+from math import sqrt
+
+# Start writing code
+df = uber_request_logs.copy()
+
+# Extract year and month for aggregation
+df['year_month'] = df['request_date'].dt.strftime('%Y-%m')
+
+# Aggregate distance_to_travel and monetary_cost by month
+monthly_data = df.groupby('year_month').agg({
+    'distance_to_travel': 'sum',
+    'monetary_cost': 'sum'
+}).reset_index()
+
+
+# Calculate distance per dollar
+monthly_data['distance_per_dollar'] = monthly_data['distance_to_travel'] / monthly_data['monetary_cost']
+
+# Shift the distance_per_dollar column to create the naive forecast
+monthly_data['forecast'] = monthly_data['distance_per_dollar'].shift(1)
+
+# Drop the first row as it doesn't have a forecast value
+monthly_data = monthly_data.dropna()
+
+# Calculate RMSE
+rmse = sqrt(((monthly_data['distance_per_dollar'] - monthly_data['forecast']) ** 2).mean())
+
+# Print RMSE rounded to 2 decimal places
+print(f"RMSE: {rmse:.2f}")
+
