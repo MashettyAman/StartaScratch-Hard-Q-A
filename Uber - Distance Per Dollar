@@ -1,0 +1,57 @@
+# Link - https://platform.stratascratch.com/coding/10302-distance-per-dollar?code_type=2
+
+## Uber -- Distance Per Dollar
+
+* You’re given a dataset of uber rides with the traveling distance (‘distance_to_travel’) and cost (‘monetary_cost’) for each ride. 
+
+* First, find the difference between the distance-per-dollar for each date and the average distance-per-dollar for that year-month. 
+
+* Distance-per-dollar is defined as the distance traveled divided by the cost of the ride. 
+ Use the calculated difference on each date to calculate absolute average difference in distance-per-dollar metric on 
+ monthly basis (year-month).
+
+* The output should include the year-month (YYYY-MM) and the absolute average difference in distance-per-dollar 
+  (Absolute value to be rounded to the 2nd decimal).
+
+* You should also count both success and failed request_status as the distance and cost values are populated for all ride requests.
+  Also, assume that all dates are unique in the dataset. Order your results by earliest request date first.
+
+# Convert 'request_date' to datetime format
+uber_rides['request_date'] = pd.to_datetime(uber_rides['request_date'])
+
+# Calculate distance-per-dollar
+uber_rides['distance_per_dollar'] = uber_rides['distance_to_travel'] / uber_rides['monetary_cost']
+
+# Extract year and month from 'request_date'
+uber_rides['year_month'] = uber_rides['request_date'].dt.strftime('%Y-%m')
+
+# Calculate average distance-per-dollar for each year-month
+avg_distance_per_dollar = uber_rides.groupby('year_month')['distance_per_dollar'].transform('mean')
+
+# Calculate absolute difference between daily distance-per-dollar and monthly average
+uber_rides['abs_diff_distance_per_dollar'] = abs(uber_rides['distance_per_dollar'] - avg_distance_per_dollar)
+
+# Calculate average of absolute differences for each year-month
+output = uber_rides.groupby('year_month')['abs_diff_distance_per_dollar'].mean().reset_index()
+
+# Round avg_diff_distance_per_dollar to 2 decimal places
+output['abs_avg_diff'] = output['abs_diff_distance_per_dollar'].round(2)
+
+# Select and rename columns for final output
+output = output[['year_month', 'abs_avg_diff']].rename(columns={'abs_avg_diff': 'absolute_avg_diff'})
+
+# Print the final output
+print(output)
+
+
+
+
+
+
+
+
+
+
+
+
+
