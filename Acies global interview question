@@ -1,0 +1,92 @@
+# Acies global interview question
+
+* swipe table which keeps track of the employees login and logout timings.
+1. find out the time employee person spent in office on perticular day (office hours  =  last logout time - first login time )
+2. find out how productive he was at a office in perticular day (he might have done many swipes per day need to find the actual time spent at office
+
+import pandas as pd
+
+# Sample data
+data = {
+    'employee_id': [1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2],
+    'activity_type': ['login', 'logout', 'login', 'logout', 'login', 'logout', 'login', 'logout', 'login', 'logout', 'login', 'logout'],
+    'activity_time': ['2024-07-23 08:00:00', '2024-07-23 12:00:00', '2024-07-23 13:00:00', '2024-07-23 17:00:00',
+                      '2024-07-23 09:00:00', '2024-07-23 11:00:00', '2024-07-23 12:00:00', '2024-07-23 15:00:00',
+                      '2024-07-24 08:30:00', '2024-07-24 12:30:00', '2024-07-24 09:30:00', '2024-07-24 10:30:00']
+}
+
+# Convert to DataFrame
+df = pd.DataFrame(data)
+
+# Convert activity_time to datetime
+df['activity_time'] = pd.to_datetime(df['activity_time'])
+
+# Create active_date column
+df['active_date'] = df['activity_time'].dt.date
+
+# Sort the DataFrame by employee_id and activity_time
+df = df.sort_values(by=['employee_id', 'activity_time'])
+
+# Create logout_time by shifting activity_time where activity_type is 'logout'
+df['logout_time'] = df.groupby(['employee_id', 'active_date'])['activity_time'].shift(-1)
+
+# Filter only 'login' activities
+df_login = df[df['activity_type'] == 'login']
+
+# Calculate total hours for each login-logout pair
+df_login['session_hrs'] = (df_login['logout_time'] - df_login['activity_time']).dt.total_seconds() / 3600
+
+# Group by employee_id and active_date to calculate total_hrs and inside_hrs
+grp = df_login.groupby(['employee_id', 'active_date']).agg(
+    total_hrs=('session_hrs', 'sum'),
+    min_activity_time=('activity_time', 'min'),
+    max_logout_time=('logout_time', 'max')
+).reset_index()
+
+# Calculate total_hrs as the difference between the first login and last logout
+grp['total_hrs'] = (grp['max_logout_time'] - grp['min_activity_time']).dt.total_seconds() / 3600
+
+# Calculate inside_hrs by summing the individual session hours
+grp['inside_hrs'] = df_login.groupby(['employee_id', 'active_date'])['session_hrs'].sum().values
+
+grp = grp.sort_values(by = 'active_date',ascending = True)
+# Display the final result
+print(grp[['employee_id', 'active_date', 'total_hrs', 'inside_hrs']])
+
+
+
+/********************************** SQL *****************************/
+
+CREATE TABLE swipe (
+    employee_id INT,
+    activity_type VARCHAR(10),
+    activity_time datetime
+);
+
+-- Insert sample data
+INSERT INTO swipe (employee_id, activity_type, activity_time) VALUES
+(1, 'login', '2024-07-23 08:00:00'),
+(1, 'logout', '2024-07-23 12:00:00'),
+(1, 'login', '2024-07-23 13:00:00'),
+(1, 'logout', '2024-07-23 17:00:00'),
+(2, 'login', '2024-07-23 09:00:00'),
+(2, 'logout', '2024-07-23 11:00:00'),
+(2, 'login', '2024-07-23 12:00:00'),
+(2, 'logout', '2024-07-23 15:00:00'),
+(1, 'login', '2024-07-24 08:30:00'),
+(1, 'logout', '2024-07-24 12:30:00'),
+(2, 'login', '2024-07-24 09:30:00'),
+(2, 'logout', '2024-07-24 10:30:00');
+
+
+with cte as(
+select *,cast (activity_time as date) active_date ,
+lead(activity_time,1) over (partition by employee_id,  cast (activity_time as date) order by activity_time) as logout_time
+from swipe)
+select employee_id,active_date,
+datediff(hour,min(activity_time),max(logout_time)) as total_hrs
+,sum(datediff(hour,min(activity_time),max(logout_time)) as inside_hrs
+from cte
+where activity_type = 'login'
+group by employee_id,activity_date
+
