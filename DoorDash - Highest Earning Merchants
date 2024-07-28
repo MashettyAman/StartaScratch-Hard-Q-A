@@ -1,0 +1,45 @@
+# DoorDash - Highest Earning Merchants
+#link - https://platform.stratascratch.com/coding/2094-highest-earning-merchants?code_type=2
+
+For each day, you have been asked to find a merchant who earned the most money on the day before.
+Before comparing totals between merchants, round the total amounts to the nearest 2 decimals places.
+Your output should include the date in the format 'YYYY-MM-DD' and the merchant's name, but only for days where data from the 
+previous day is available.
+Note: In the case of multiple merchants having the same highest shared amount, your output should include all the names in different rows.
+
+# Import your libraries
+import pandas as pd
+
+# Start writing code
+# Extract date from order_timestamp
+order_details['date'] = order_details['order_timestamp'].dt.date
+
+# Aggregate earnings by merchant and date
+daily_earnings = order_details.groupby(['date', 'merchant_id']).agg({'total_amount_earned': 'sum'}).reset_index()
+
+# Round the total amounts to 2 decimal places
+daily_earnings['total_amount_earned'] = daily_earnings['total_amount_earned'].round(2)
+
+# Create a column for the previous day
+daily_earnings['previous_date'] = daily_earnings['date'] - pd.Timedelta(days=1)
+
+# Merge daily earnings with itself to find previous day earnings
+previous_day_earnings = daily_earnings.merge(daily_earnings, left_on=['previous_date', 'merchant_id'], right_on=['date', 'merchant_id'], suffixes=('', '_previous'))
+
+# Find the maximum earnings for the previous day
+max_earnings = previous_day_earnings.groupby('date').agg({'total_amount_earned_previous': 'max'}).reset_index()
+
+# Merge to get the merchant details for the maximum earnings
+result = previous_day_earnings.merge(max_earnings, on=['date', 'total_amount_earned_previous'])
+
+# Join with merchant details to get merchant names
+result = result.merge(merchant_details, left_on='merchant_id', right_on='id')
+
+# Select and rename columns for the final output
+final_result = result[['date', 'name']].rename(columns={'date': 'YYYY-MM-DD', 'name': 'merchant_name'})
+
+# Display the final result
+# print(final_result)
+
+
+
