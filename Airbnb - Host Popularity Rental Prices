@@ -1,0 +1,55 @@
+# Host Popularity Rental Prices
+
+# https://platform.stratascratch.com/coding/9632-host-popularity-rental-prices?code_type=2
+
+// You’re given a table of rental property searches by users. 
+The table consists of search results and outputs host information for searchers. 
+Find the minimum, average, maximum rental prices for each host’s popularity rating. The host’s popularity rating is defined as below:
+0 reviews: New
+1 to 5 reviews: Rising
+6 to 15 reviews: Trending Up
+16 to 40 reviews: Popular
+more than 40 reviews: Hot
+
+
+Tip: The id column in the table refers to the search ID. You'll need to create your own 
+host_id by concating price, room_type, host_since, zipcode, and number_of_reviews.
+
+
+Output host popularity rating and their minimum, average and maximum rental prices.//
+
+# Import your libraries
+import pandas as pd
+
+# Start writing code
+
+df = airbnb_host_searches.copy()
+df = df.drop_duplicates(subset=['price', 'room_type', 'host_since', 'zipcode', 'number_of_reviews'])
+# Concatenate the specified columns into a new DataFrame
+# Columns to concatenate
+columns_to_concat = ['price', 'room_type', 'host_since', 'zipcode']
+
+# Join the specific columns into a single column with values separated by "_"
+df['joined_columns'] = df[columns_to_concat].apply(lambda row: '_'.join(row.values.astype(str)), axis=1)
+df = df[['joined_columns','number_of_reviews','price']]
+
+def popularity(reviews):
+    if reviews == 0:
+        return 'New'
+    elif 1 <= reviews <= 5:
+        return 'Rising'
+    elif 6 <= reviews <= 15:
+        return 'Trending Up'
+    elif 16 <= reviews <= 40:
+        return 'Popular'
+    else:
+        return 'Hot'
+
+df['host_popularity'] = df['number_of_reviews'].apply(popularity)
+
+# Group by 'host_popularity' and aggregate with min, mean, and max
+result = df.groupby(['host_popularity']).agg({'price': ['min', 'mean', 'max']}).reset_index()
+
+# Flatten the MultiIndex columns
+result.columns = ['host_popularity', 'min_price', 'avg_price', 'max_price']
+result
