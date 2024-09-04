@@ -1,0 +1,29 @@
+# Growth of Airbnb
+#link - https://platform.stratascratch.com/coding/9637-growth-of-airbnb?code_type=2
+
+import pandas as pd
+
+# Start writing code
+df = airbnb_search_details
+
+# Convert 'host_since' to datetime
+df['host_since'] = pd.to_datetime(df['host_since'])
+
+# Extract year from 'host_since'
+df['year'] = df['host_since'].dt.year
+
+# Count number of hosts per year
+hosts_per_year = df.groupby('year').size().reset_index(name='number_of_hosts')
+
+# Calculate the rate of growth
+hosts_per_year['previous_year_hosts'] = hosts_per_year['number_of_hosts'].shift(1)
+hosts_per_year['growth_rate'] = ((hosts_per_year['number_of_hosts'] - hosts_per_year['previous_year_hosts']) / hosts_per_year['previous_year_hosts']) * 100
+
+# Round the growth rate to the nearest percent
+hosts_per_year['growth_rate'] = hosts_per_year['growth_rate'].round()
+
+# Drop rows with NaN values (first year will not have previous year data)
+hosts_per_year = hosts_per_year.dropna()
+
+# Select relevant columns and sort by year
+result = hosts_per_year[['year', 'number_of_hosts', 'previous_year_hosts', 'growth_rate']].sort_values(by='year')
