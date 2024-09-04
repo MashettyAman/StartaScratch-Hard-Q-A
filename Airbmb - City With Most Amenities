@@ -1,0 +1,15 @@
+# City With Most Amenities
+
+#link = https://platform.stratascratch.com/coding/9633-city-with-most-amenities?code_type=2
+
+import pandas as pd
+import numpy as np
+
+# Start writing code
+# airbnb_search_details.groupby('city')['amenities'].size().reset_index(name= 'most_a').sort_values(by = 'most_a',ascending = False)['city'].head(1)
+
+df = airbnb_search_details.copy()
+df = df.assign(len_amenities = lambda x: x['amenities'].map(len))
+grp = df[df.groupby(['city']
+    )['len_amenities'].transform(max) == df['len_amenities']]
+grp.sort_values(by = 'len_amenities' ,ascending = False)['city'].head(1)
