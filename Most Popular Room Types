@@ -1,0 +1,29 @@
+# Most Popular Room Types
+
+# link - https://platform.stratascratch.com/coding/9763-most-popular-room-types?code_type=2
+
+//Find the room types that are searched by most people. 
+Output the room type alongside the number of searches for it. 
+If the filter for room types has more than one room type, consider each unique room type as a separate row. 
+Sort the result based on the number of searches in descending order.//
+
+import pandas as pd
+
+# Start writing code
+df = airbnb_searches[['id_user','filter_room_types']].copy()
+
+df['filter_room_types'] = df['filter_room_types'].str.strip(',')  # Remove leading comma if present
+room_types = df['filter_room_types'].str.split(',', expand=True).stack()  # Split and stack
+room_types = room_types.reset_index(drop=True)  # Reset index for proper DataFrame
+room_types_df = pd.DataFrame(room_types, columns=['room_type'])  # Create DataFrame
+
+# Count occurrences of each room type
+room_type_counts = room_types_df['room_type'].value_counts().reset_index()
+room_type_counts.columns = ['room_type', 'number_of_searches']
+
+# Sort the result based on the number of searches in descending order
+sorted_room_type_counts = room_type_counts.sort_values(by='number_of_searches', ascending=False)
+
+# Display the result
+print(sorted_room_type_counts)
+
